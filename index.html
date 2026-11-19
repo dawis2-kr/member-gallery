@@ -240,7 +240,15 @@
   .tab[aria-selected="true"] { background: var(--surface-3); color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,.3); }
 
   .auth-form .btn.block { margin-top: 4px; }
+  .auth-form .btn.block + .btn.block { margin-top: 8px; }
   .form-note { margin: 12px 0 0; font-size: 12.2px; color: var(--muted-2); line-height: 1.5; }
+  .modal .btn.block { margin-top: 10px; }
+  .reset-badge {
+    display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 999px; color: #ddd6fe;
+    background: rgba(139, 92, 246, .16); border: 1px solid rgba(139, 92, 246, .32);
+  }
 
   .notice {
     display: flex; gap: 11px; align-items: flex-start; padding: 13px 14px;
@@ -512,6 +520,7 @@
             <input class="input" id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="비밀번호" required>
           </div>
           <button class="btn primary block" id="loginSubmit" type="submit">로그인</button>
+          <button class="btn ghost block" id="forgotBtn" type="button">비밀번호를 잊으셨나요?</button>
           <p class="form-note">아직 멤버가 아니신가요? 초대 코드를 받으셨다면 회원가입 후 코드를 입력해 주세요.</p>
         </form>
 
@@ -637,6 +646,10 @@ const SIGNED_TTL = 3600;
 const PENDING_CODE_KEY = 'mg_pending_invite';
 const SITE_URL = location.origin + location.pathname;
 
+// 메일의 비밀번호 재설정 링크로 들어왔는지 (supabase-js가 해시를 소비하기 전에 확인)
+const recoveryInUrl = /(^|[#&?])type=recovery(&|$)/.test(location.hash) ||
+  /(^|[#&?])type=recovery(&|$)/.test(location.search);
+
 const MEDIA_TYPES = {
   'image/jpeg': 'image', 'image/png': 'image', 'image/webp': 'image', 'image/gif': 'image',
   'video/mp4': 'video', 'video/quicktime': 'video', 'video/webm': 'video'
@@ -750,6 +763,9 @@ function msgFor(error) {
   if (/rate limit|too many requests/.test(lower) || code === 'over_email_send_rate_limit') return '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.';
   if (/invalid email/.test(lower)) return '이메일 형식을 확인해 주세요.';
   if (/signup is disabled/.test(lower)) return '현재 회원가입이 잠시 닫혀 있습니다. 관리자에게 문의해 주세요.';
+  if (/auth session missing|session_not_found|invalid claim|jwt expired/.test(lower)) return '재설정 링크가 만료되었거나 이미 사용되었습니다. \'비밀번호를 잊으셨나요?\'에서 다시 요청해 주세요.';
+  if (/new password should be different/.test(lower)) return '이전과 다른 새 비밀번호를 입력해 주세요.';
+  if (/token has expired or is invalid|otp_expired|invalid or has expired/.test(lower)) return '링크가 만료되었거나 이미 사용되었습니다. 재설정 메일을 다시 요청해 주세요.';
   if (/row-level security|permission denied|not authorized/.test(lower)) return '권한이 없습니다. 멤버 승인 상태를 확인해 주세요.';
   if (/payload too large|exceeded the maximum allowed size|entity too large/.test(lower)) return '파일이 너무 큽니다. 50MB 이하로 올려 주세요.';
   if (/mime type|content type/.test(lower)) return '지원하지 않는 파일 형식입니다. (jpg·png·webp·gif / mp4·mov·webm)';
@@ -1019,6 +1035,164 @@ $('resendBtn').addEventListener('click', async () => {
     setBusy(button, false);
   }
 });
+
+/* ------------------------------------------------------------------ */
+/*  비밀번호 재설정                                                    */
+/* ------------------------------------------------------------------ */
+function overlayLayer(html, labelledBy) {
+  const layer = document.createElement('div');
+  layer.className = 'overlay';
+  layer.innerHTML = html;
+  const close = () => { layer.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (event) => { if (event.key === 'Escape') { close(); if (typeof layer.__onClose === 'function') layer.__onClose(); } };
+  layer.addEventListener('click', (event) => {
+    if (event.target === layer || event.target.closest('[data-close]')) {
+      close();
+      if (typeof layer.__onClose === 'function') layer.__onClose();
+    }
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(layer);
+  const dialog = layer.querySelector('[role="dialog"]');
+  if (dialog && labelledBy) dialog.setAttribute('aria-labelledby', labelledBy);
+  const first = layer.querySelector('input');
+  if (first) setTimeout(() => first.focus(), 30);
+  return { layer, close };
+}
+
+function openForgotPanel() {
+  const preset = ($('loginEmail').value || '').trim();
+  const { layer } = overlayLayer(`<div class="modal" role="dialog" aria-modal="true" style="width:min(460px,100%)">
+    <span class="reset-badge">🔑 비밀번호 재설정</span>
+    <h3>비밀번호를 잊으셨나요?</h3>
+    <p>가입한 이메일로 새 비밀번호를 만들 수 있는 링크를 보내 드립니다. 링크는 한 번만 쓸 수 있습니다.</p>
+    <form id="forgotForm" novalidate>
+      <div class="field">
+        <label for="forgotEmail">이메일</label>
+        <input class="input" id="forgotEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" value="${esc(preset)}" required>
+      </div>
+      <div id="forgotNotice" hidden></div>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close type="button">닫기</button>
+        <button class="btn primary" id="forgotSubmit" type="submit">재설정 메일 보내기</button>
+      </div>
+    </form>
+  </div>`);
+
+  const form = layer.querySelector('#forgotForm');
+  const emailInput = layer.querySelector('#forgotEmail');
+  const noticeEl = layer.querySelector('#forgotNotice');
+  const sendButton = layer.querySelector('#forgotSubmit');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = emailInput.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      notice(noticeEl, '<span class="ico">!</span><span>이메일 형식을 확인해 주세요.</span>', 'warn');
+      emailInput.focus();
+      return;
+    }
+    setBusy(sendButton, true, '보내는 중…');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: SITE_URL });
+      if (error) throw error;
+      notice(
+        noticeEl,
+        '<span class="ico">✉️</span><span><b>재설정 메일을 보냈습니다.</b><br>' + esc(email) +
+        ' 의 받은 편지함에서 링크를 눌러 주세요. 메일이 보이지 않으면 스팸함도 확인해 주세요.</span>',
+        'ok'
+      );
+      sendButton.disabled = true;
+      sendButton.textContent = '메일을 보냈습니다';
+    } catch (error) {
+      notice(noticeEl, `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+      setBusy(sendButton, false);
+    }
+  });
+}
+
+let resetPanelOpen = false;
+
+function openResetPanel() {
+  if (resetPanelOpen) return;
+  resetPanelOpen = true;
+
+  const { layer, close } = overlayLayer(`<div class="modal" role="dialog" aria-modal="true" style="width:min(460px,100%)">
+    <span class="reset-badge">🔑 새 비밀번호</span>
+    <h3>새 비밀번호를 정해 주세요</h3>
+    <p>메일 링크로 본인 확인이 끝났습니다. 앞으로 사용할 새 비밀번호를 입력해 주세요.</p>
+    <form id="resetForm" novalidate>
+      <div class="field">
+        <label for="resetPassword">새 비밀번호</label>
+        <input class="input" id="resetPassword" type="password" autocomplete="new-password" minlength="6" placeholder="6자 이상" required>
+      </div>
+      <div class="field">
+        <label for="resetPassword2">새 비밀번호 확인</label>
+        <input class="input" id="resetPassword2" type="password" autocomplete="new-password" minlength="6" placeholder="다시 한 번 입력" required>
+      </div>
+      <div id="resetNotice" hidden></div>
+      <div class="modal-actions">
+        <button class="btn ghost" data-close type="button">나중에</button>
+        <button class="btn primary" id="resetSubmit" type="submit">저장하고 시작하기</button>
+      </div>
+    </form>
+  </div>`);
+
+  const form = layer.querySelector('#resetForm');
+  const pass1 = layer.querySelector('#resetPassword');
+  const pass2 = layer.querySelector('#resetPassword2');
+  const noticeEl = layer.querySelector('#resetNotice');
+  const saveButton = layer.querySelector('#resetSubmit');
+
+  const leave = () => {
+    resetPanelOpen = false;
+    // 재설정 토큰이 남은 주소로 새로고침하지 않도록 해시를 지운다
+    if (recoveryInUrl && location.hash.indexOf('access_token=') >= 0) {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+    if (state.session) applySession(state.session);
+  };
+  layer.__onClose = leave;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    notice(noticeEl, '', null);
+    const password = pass1.value;
+    if (password.length < 6) {
+      notice(noticeEl, '<span class="ico">!</span><span>비밀번호는 6자 이상이어야 합니다.</span>', 'warn');
+      pass1.focus();
+      return;
+    }
+    if (password !== pass2.value) {
+      notice(noticeEl, '<span class="ico">!</span><span>두 비밀번호가 서로 다릅니다. 다시 확인해 주세요.</span>', 'warn');
+      pass2.focus();
+      return;
+    }
+
+    setBusy(saveButton, true, '저장 중…');
+    try {
+      if (!state.session) {
+        const { data: current } = await supabase.auth.getSession();
+        state.session = (current && current.session) || null;
+      }
+      if (!state.session) throw new Error('Auth session missing');
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      pass1.value = '';
+      pass2.value = '';
+      close();
+      resetPanelOpen = false;
+      history.replaceState(null, '', location.pathname);
+      toast('비밀번호를 바꿨습니다. 이제 새 비밀번호로 로그인할 수 있어요.', 'ok', 6000);
+      await applySession(state.session);
+    } catch (error) {
+      notice(noticeEl, `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+      setBusy(saveButton, false);
+    }
+  });
+}
+
+$('forgotBtn').addEventListener('click', openForgotPanel);
 
 /* ------------------------------------------------------------------ */
 /*  로그아웃                                                           */
@@ -1524,7 +1698,10 @@ $('ownerBtn').addEventListener('click', openOwnerPanel);
 
   const hashError = parseHashError();
   if (hashError) {
-    toast('로그인 링크를 처리하지 못했습니다: ' + hashError, 'error', 7000);
+    const friendly = /expired|invalid/i.test(hashError)
+      ? '재설정 링크가 만료되었거나 이미 사용되었습니다. \'비밀번호를 잊으셨나요?\'에서 다시 요청해 주세요.'
+      : hashError;
+    toast(friendly, 'error', 7000);
   }
 
   try {
@@ -1546,11 +1723,29 @@ $('ownerBtn').addEventListener('click', openOwnerPanel);
       }
       return;
     }
+    if (event === 'PASSWORD_RECOVERY') {
+      if (session) state.session = session;
+      setTimeout(() => openResetPanel(), 0);
+      return;
+    }
     if (event === 'SIGNED_IN' && session && (!state.session || state.session.user.id !== session.user.id)) {
       state.session = session;
       setTimeout(() => { applySession(session); }, 0);
     }
   });
+
+  // 메일의 재설정 링크로 들어온 경우: 토큰 교환이 끝난 뒤 새 비밀번호 입력창을 띄운다
+  if (recoveryInUrl) {
+    setTimeout(async () => {
+      if (!state.session) {
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data && data.session) state.session = data.session;
+        } catch (error) { /* 세션 없이 진행하면 저장 시 안내 메시지를 보여 준다 */ }
+      }
+      openResetPanel();
+    }, 500);
+  }
 
   // 임시 링크(Signed URL)는 1시간 유효 → 화면으로 돌아왔을 때 오래됐으면 갱신
   document.addEventListener('visibilitychange', () => {
