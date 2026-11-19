@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>멤버 갤러리 — 초대받은 멤버만의 비공개 공간</title>
+<meta name="description" content="초대 코드를 받은 멤버만 사진과 영상을 올리고 댓글로 이야기하는 비공개 커뮤니티입니다.">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff4d6d'/%3E%3Cstop offset='.5' stop-color='%23a78bfa'/%3E%3Cstop offset='1' stop-color='%2338bdf8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='%230a0a0f'/%3E%3Ccircle cx='16' cy='16' r='8.5' fill='none' stroke='url(%23g)' stroke-width='4'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0a0f;
+    --bg-soft: #0f0f16;
+    --surface: #14141d;
+    --surface-2: #1b1b26;
+    --surface-3: #222230;
+    --line: rgba(255, 255, 255, .075);
+    --line-strong: rgba(255, 255, 255, .16);
+    --text: #f3f3f8;
+    --muted: #a0a0b4;
+    --muted-2: #74748a;
+    --violet: #8b5cf6;
+    --pink: #ec4899;
+    --cyan: #38bdf8;
+    --green: #34d399;
+    --red: #fb7185;
+    --pride: linear-gradient(90deg, #e40303 0%, #ff8c00 16%, #ffed00 32%, #008026 48%, #004dff 64%, #750787 80%, #ff4fa3 100%);
+    --radius: 18px;
+    --shadow: 0 18px 40px rgba(0, 0, 0, .45);
+    --font: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1100px 560px at 50% -12%, rgba(139, 92, 246, .20), transparent 62%),
+      radial-gradient(900px 520px at 104% -4%, rgba(236, 72, 153, .14), transparent 58%),
+      radial-gradient(700px 500px at -6% 8%, rgba(56, 189, 248, .10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.5;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  img, video, svg { max-width: 100%; }
+
+  button, input, textarea, select { font: inherit; color: inherit; }
+
+  [hidden] { display: none !important; }
+
+  :focus-visible { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+
+  .pride-line {
+    position: fixed; inset: 0 0 auto 0; height: 3px;
+    background: var(--pride); opacity: .95; z-index: 70;
+  }
+
+  .wrap { width: min(1120px, 100%); margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- header ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(10, 10, 15, .78);
+    backdrop-filter: blur(16px) saturate(130%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; padding: 13px 0 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .brand-mark {
+    position: relative; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px;
+    background: conic-gradient(from 210deg, #ff4d6d, #ffb347, #ffe66d, #4ade80, #38bdf8, #a78bfa, #ff4d6d);
+    box-shadow: 0 6px 18px rgba(139, 92, 246, .35);
+  }
+  .brand-mark::after {
+    content: ""; position: absolute; inset: 7px; border-radius: 8px; background: #0b0b12;
+  }
+  .brand-text { min-width: 0; }
+  .brand h1 {
+    margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; line-height: 1.25;
+  }
+  .brand p {
+    margin: 2px 0 0; font-size: 12px; color: var(--muted-2); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .top-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .user-chip {
+    display: inline-flex; align-items: center; gap: 8px; min-width: 0;
+    padding: 4px 10px 4px 4px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--line);
+    font-size: 13px; font-weight: 600; max-width: 190px;
+  }
+  .user-chip #userName {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .role-badge {
+    flex: 0 0 auto; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    padding: 3px 6px; border-radius: 6px; text-transform: uppercase;
+    background: rgba(139, 92, 246, .18); color: #ddd6fe; border: 1px solid rgba(139, 92, 246, .3);
+  }
+  .role-badge.owner {
+    background: linear-gradient(90deg, rgba(236,72,153,.2), rgba(56,189,248,.2));
+    color: #fbcfe8; border-color: rgba(236, 72, 153, .35);
+  }
+
+  .avatar {
+    display: inline-grid; place-items: center; flex: 0 0 auto;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 12px; font-weight: 800; color: #0b0b12;
+    background: linear-gradient(135deg, #ffd7e6, #d8ccff 55%, #bfe9ff);
+  }
+  .avatar.sm { width: 26px; height: 26px; font-size: 11px; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px 16px; border-radius: 11px; border: 1px solid transparent;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: transform .12s ease, background .16s ease, border-color .16s ease, opacity .16s ease;
+    text-decoration: none; white-space: nowrap;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.primary {
+    background: linear-gradient(120deg, #8b5cf6, #ec4899 70%, #f97316);
+    color: #fff; box-shadow: 0 8px 24px rgba(236, 72, 153, .28);
+  }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn.ghost {
+    background: var(--surface); border-color: var(--line-strong); color: var(--text);
+  }
+  .btn.ghost:hover:not(:disabled) { background: var(--surface-2); }
+  .btn.sm { padding: 7px 12px; font-size: 13px; border-radius: 9px; }
+  .btn.block { width: 100%; }
+  .btn.danger { background: rgba(251, 113, 133, .14); border-color: rgba(251, 113, 133, .4); color: #fecdd3; }
+  .btn.danger:hover:not(:disabled) { background: rgba(251, 113, 133, .22); }
+
+  .icon-btn {
+    display: inline-grid; place-items: center; width: 28px; height: 28px;
+    border: 0; border-radius: 8px; background: transparent; color: var(--muted-2);
+    cursor: pointer; font-size: 15px; line-height: 1;
+  }
+  .icon-btn:hover { background: rgba(251, 113, 133, .14); color: #fda4af; }
+
+  /* ---------- forms ---------- */
+  .field { display: grid; gap: 6px; margin-bottom: 12px; }
+  .field label { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .input, .textarea {
+    width: 100%; padding: 12px 13px; border-radius: 11px;
+    background: var(--bg-soft); border: 1px solid var(--line-strong);
+    color: var(--text); font-size: 14.5px; transition: border-color .15s ease, background .15s ease;
+  }
+  .input::placeholder, .textarea::placeholder { color: var(--muted-2); }
+  .input:focus, .textarea:focus {
+    outline: none; border-color: rgba(167, 139, 250, .75);
+    background: #0c0c13; box-shadow: 0 0 0 3px rgba(139, 92, 246, .16);
+  }
+  .textarea { resize: vertical; min-height: 62px; line-height: 1.55; }
+  .hint { font-size: 12px; color: var(--muted-2); }
+  .hint.ok { color: #86efac; }
+  .hint.bad { color: #fda4af; }
+
+  .inline-row { display: flex; gap: 8px; align-items: stretch; }
+  .inline-row > .input { flex: 1 1 auto; min-width: 0; }
+  .inline-row > .btn { flex: 0 0 auto; }
+
+  /* ---------- views / layout ---------- */
+  main { padding: 26px 0 60px; }
+  .view { animation: fadeUp .28s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    html { scroll-behavior: auto; }
+  }
+
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,0)) , var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---------- auth ---------- */
+  .auth-grid {
+    display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px;
+    align-items: center; padding: 26px 0 10px;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+    color: #ddd6fe; padding: 6px 12px; border-radius: 999px;
+    background: rgba(139, 92, 246, .14); border: 1px solid rgba(139, 92, 246, .3);
+  }
+  .hero h2 {
+    margin: 18px 0 12px; font-size: clamp(30px, 4.6vw, 46px); line-height: 1.14;
+    letter-spacing: -.035em; font-weight: 800;
+  }
+  .hero h2 .grad {
+    background: linear-gradient(100deg, #fda4af, #e9d5ff 42%, #a5f3fc);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.lead { margin: 0 0 22px; font-size: 15.5px; color: var(--muted); max-width: 46ch; }
+  .feature-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .feature-list li {
+    display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start;
+    font-size: 13.8px; color: var(--muted);
+  }
+  .feature-list b { color: var(--text); display: block; font-size: 14px; margin-bottom: 1px; }
+  .feat-ico {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    font-size: 16px; background: var(--surface-2); border: 1px solid var(--line);
+  }
+
+  .auth-card { padding: 22px; }
+  .tabs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    padding: 4px; background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: 12px; margin-bottom: 18px;
+  }
+  .tab {
+    padding: 9px 10px; border: 0; border-radius: 9px; background: transparent;
+    color: var(--muted); font-size: 13.5px; font-weight: 700; cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tab[aria-selected="true"] { background: var(--surface-3); color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,.3); }
+
+  .auth-form .btn.block { margin-top: 4px; }
+  .form-note { margin: 12px 0 0; font-size: 12.2px; color: var(--muted-2); line-height: 1.5; }
+
+  .notice {
+    display: flex; gap: 11px; align-items: flex-start; padding: 13px 14px;
+    border-radius: 12px; background: rgba(56, 189, 248, .08);
+    border: 1px solid rgba(56, 189, 248, .25); font-size: 13px; color: #bae6fd;
+    margin-bottom: 14px; line-height: 1.55;
+  }
+  .notice.warn { background: rgba(251, 191, 36, .08); border-color: rgba(251, 191, 36, .28); color: #fde68a; }
+  .notice.ok { background: rgba(52, 211, 153, .08); border-color: rgba(52, 211, 153, .28); color: #a7f3d0; }
+  .notice .ico { font-size: 15px; line-height: 1.35; }
+
+  /* ---------- invite ---------- */
+  .center-stage { max-width: 470px; margin: 26px auto 0; padding: 26px 22px; }
+  .center-stage h2 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.02em; }
+  .center-stage p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+  .who { font-size: 12.5px; color: var(--muted-2); margin-top: 16px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .who .email { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- feed ---------- */
+  .feed-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .filters { display: inline-flex; gap: 6px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .chip {
+    border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700;
+    padding: 7px 13px; border-radius: 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .chip[aria-pressed="true"] { background: var(--surface-3); color: var(--text); }
+  .chip .n { font-size: 11px; color: var(--muted-2); font-weight: 700; }
+
+  .composer { padding: 16px; margin-bottom: 22px; }
+  .dropzone {
+    width: 100%; display: grid; place-items: center; gap: 4px; padding: 22px 16px;
+    border-radius: 13px; border: 1.5px dashed rgba(255,255,255,.18);
+    background: rgba(255,255,255,.015); cursor: pointer; text-align: center;
+    transition: border-color .16s ease, background .16s ease;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: rgba(167, 139, 250, .7); background: rgba(139, 92, 246, .07); }
+  .dropzone strong { font-size: 14px; }
+  .dropzone span { font-size: 12.5px; color: var(--muted-2); }
+
+  .preview {
+    position: relative; border-radius: 13px; overflow: hidden; border: 1px solid var(--line-strong);
+    background: #000; display: grid; place-items: center; margin-bottom: 12px; max-height: 360px;
+  }
+  .preview img, .preview video { display: block; max-height: 360px; width: auto; max-width: 100%; }
+  .preview .remove {
+    position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%;
+    border: 0; background: rgba(0,0,0,.62); color: #fff; font-size: 16px; cursor: pointer;
+    display: grid; place-items: center; backdrop-filter: blur(4px);
+  }
+  .preview .filetag {
+    position: absolute; left: 8px; bottom: 8px; font-size: 11px; font-weight: 700;
+    padding: 4px 8px; border-radius: 6px; background: rgba(0,0,0,.6); color: #e5e7eb;
+    max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+
+  .progress { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+  .progress .track { position: relative; flex: 1 1 auto; height: 5px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+  .progress .track i {
+    position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 999px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    animation: slide 1.15s ease-in-out infinite;
+  }
+  @keyframes slide { 0% { left: -40%; } 100% { left: 102%; } }
+  .progress span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;
+    align-items: start;
+  }
+  .post { overflow: hidden; display: flex; flex-direction: column; }
+  .post-media {
+    position: relative; background: #07070b; cursor: zoom-in;
+    display: grid; place-items: center; min-height: 120px; max-height: 520px; overflow: hidden;
+  }
+  .post-media img, .post-media video {
+    display: block; width: 100%; height: auto; max-height: 520px; object-fit: contain;
+  }
+  .post-media video { cursor: default; }
+  .media-badge {
+    position: absolute; top: 9px; left: 9px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em;
+    padding: 4px 8px; border-radius: 6px; background: rgba(0,0,0,.62); color: #e5e7eb;
+    backdrop-filter: blur(4px);
+  }
+  .post-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; }
+  .post-head { display: flex; align-items: center; gap: 9px; }
+  .post-head .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; margin: 0; }
+  .post-head strong { font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .post-head time { font-size: 11.5px; color: var(--muted-2); }
+  .post-head .spacer { flex: 1 1 auto; }
+  .caption { margin: 0; font-size: 14px; color: #e6e6ef; white-space: pre-wrap; }
+  .caption:empty { display: none; }
+
+  .comment-toggle {
+    align-self: flex-start; border: 0; background: transparent; color: var(--muted);
+    font-size: 12.5px; font-weight: 700; padding: 4px 0; cursor: pointer;
+  }
+  .comment-toggle:hover { color: #ddd6fe; }
+  .comments { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 2px; display: grid; gap: 9px; }
+  .comments ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .comments li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: start; font-size: 13px; }
+  .comments li .avatar { width: 22px; height: 22px; font-size: 10px; }
+  .comments li .body { min-width: 0; }
+  .comments li .body b { font-size: 12.5px; margin-right: 6px; }
+  .comments li .body p { margin: 1px 0 0; color: #dcdce7; white-space: pre-wrap; }
+  .comments li .body time { font-size: 11px; color: var(--muted-2); }
+  .comment-form { display: flex; gap: 8px; }
+  .comment-form .input { padding: 9px 11px; font-size: 13.5px; border-radius: 9px; }
+  .comment-form .btn { padding: 0 13px; font-size: 13px; border-radius: 9px; }
+  .no-comments { font-size: 12.5px; color: var(--muted-2); margin: 0; }
+
+  .empty {
+    text-align: center; padding: 54px 20px; color: var(--muted);
+    border: 1px dashed rgba(255,255,255,.14); border-radius: var(--radius); background: rgba(255,255,255,.012);
+  }
+  .empty .big { font-size: 34px; margin-bottom: 10px; }
+  .empty h3 { margin: 0 0 6px; font-size: 17px; color: var(--text); }
+  .empty p { margin: 0; font-size: 13.5px; }
+
+  .skeleton { border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); height: 300px; position: relative; overflow: hidden; }
+  .skeleton::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.045) 45%, transparent 70%);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  /* ---------- modal / lightbox / toast ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px;
+    background: rgba(4, 4, 8, .76); backdrop-filter: blur(6px); animation: fade .16s ease both;
+  }
+  @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+  .modal {
+    width: min(560px, 100%); max-height: 86vh; overflow: auto; padding: 22px;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 18px;
+    box-shadow: 0 30px 70px rgba(0,0,0,.6);
+  }
+  .modal h3 { margin: 0 0 6px; font-size: 18px; letter-spacing: -.01em; }
+  .modal p { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .code-block {
+    position: relative; background: #0b0b12; border: 1px solid var(--line-strong); border-radius: 11px;
+    padding: 12px 13px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.2px; line-height: 1.6; color: #d9d9e6; white-space: pre-wrap; word-break: break-word; margin: 8px 0 4px;
+  }
+  .code-block + .copy-row { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+  .member-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 7px; max-height: 190px; overflow: auto; }
+  .member-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .member-list .role-badge { margin-left: auto; }
+
+  .lightbox { position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,.92); display: grid; place-items: center; padding: 16px; cursor: zoom-out; }
+  .lightbox img, .lightbox video { max-width: 96vw; max-height: 92vh; border-radius: 10px; }
+  .lightbox .close { position: absolute; top: 14px; right: 16px; font-size: 26px; color: #fff; background: none; border: 0; cursor: pointer; }
+
+  #toasts {
+    position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 120; display: grid; gap: 8px; width: min(440px, calc(100% - 28px)); pointer-events: none;
+  }
+  .toast {
+    padding: 12px 15px; border-radius: 12px; font-size: 13.5px; font-weight: 600;
+    background: rgba(24, 24, 34, .96); border: 1px solid var(--line-strong); color: var(--text);
+    box-shadow: 0 16px 40px rgba(0,0,0,.5); animation: toastIn .22s ease both;
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .toast.ok { border-color: rgba(52, 211, 153, .4); }
+  .toast.error { border-color: rgba(251, 113, 133, .45); }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,.14); border-top-color: #c4b5fd;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-stage { display: grid; place-items: center; gap: 12px; padding: 90px 0; color: var(--muted); font-size: 13.5px; }
+
+  footer.site {
+    border-top: 1px solid var(--line); padding: 18px 0 30px; color: var(--muted-2); font-size: 11.8px;
+    display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;
+  }
+
+  @media (max-width: 860px) {
+    .auth-grid { grid-template-columns: 1fr; gap: 22px; padding-top: 10px; }
+    .hero h2 { font-size: clamp(27px, 8vw, 34px); margin-top: 14px; }
+    .feature-list { gap: 10px; }
+  }
+  @media (max-width: 620px) {
+    .wrap { padding: 0 14px; }
+    .brand p { display: none; }
+    .user-chip { max-width: 132px; }
+    .role-badge { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .composer-foot { flex-direction: column; align-items: stretch; }
+    .composer-foot .btn { width: 100%; }
+    .post-media img, .post-media video { max-height: 62vh; }
+  }
+</style>
+</head>
+<body>
+<div class="pride-line" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-text">
+        <h1>멤버 갤러리</h1>
+        <p>초대받은 멤버만 함께 보는 비공개 공간</p>
+      </div>
+    </div>
+    <div class="top-actions" id="topActions" hidden>
+      <span class="user-chip">
+        <span class="avatar" id="userAvatar" aria-hidden="true">·</span>
+        <span id="userName">멤버</span>
+        <span class="role-badge" id="userRole">MEMBER</span>
+      </span>
+      <button class="btn ghost sm" id="ownerBtn" type="button" hidden>초대 관리</button>
+      <button class="btn ghost sm" id="logoutBtn" type="button">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 로딩 -->
+  <section id="viewLoading" class="view" aria-live="polite">
+    <div class="loading-stage"><div class="spinner" aria-hidden="true"></div><span>불러오는 중…</span></div>
+  </section>
+
+  <!-- 로그인 / 가입 -->
+  <section id="viewAuth" class="view" hidden>
+    <div class="auth-grid">
+      <div class="hero">
+        <span class="eyebrow">Private Community</span>
+        <h2>우리만의 사진,<br><span class="grad">우리만의 공간.</span></h2>
+        <p class="lead">초대 코드를 받은 멤버만 들어올 수 있는 비공개 갤러리입니다. 사진과 영상을 올리고, 서로 댓글로 이야기를 남겨 보세요.</p>
+        <ul class="feature-list">
+          <li>
+            <span class="feat-ico" aria-hidden="true">🔒</span>
+            <div><b>비공개 저장</b>사진·영상은 비공개 버킷에 보관되고, 권한이 확인된 순간에만 열리는 임시 링크(Signed URL)로 표시됩니다.</div>
+          </li>
+          <li>
+            <span class="feat-ico" aria-hidden="true">🎟️</span>
+            <div><b>초대 코드 입장</b>가입만으로는 아무것도 보이지 않습니다. 유효한 초대 코드를 입력해야 멤버가 됩니다.</div>
+          </li>
+          <li>
+            <span class="feat-ico" aria-hidden="true">🧹</span>
+            <div><b>내 것만 삭제</b>내가 올린 게시물과 댓글만 직접 지울 수 있습니다.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card auth-card">
+        <div class="tabs" role="tablist" aria-label="로그인 또는 회원가입">
+          <button class="tab" id="tabLogin" role="tab" aria-selected="true" aria-controls="panelLogin" type="button">로그인</button>
+          <button class="tab" id="tabSignup" role="tab" aria-selected="false" aria-controls="panelSignup" type="button">회원가입</button>
+        </div>
+
+        <form class="auth-form" id="panelLogin" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+          <div class="field">
+            <label for="loginEmail">이메일</label>
+            <input class="input" id="loginEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="loginPassword">비밀번호</label>
+            <input class="input" id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="비밀번호" required>
+          </div>
+          <button class="btn primary block" id="loginSubmit" type="submit">로그인</button>
+          <p class="form-note">아직 멤버가 아니신가요? 초대 코드를 받으셨다면 회원가입 후 코드를 입력해 주세요.</p>
+        </form>
+
+        <form class="auth-form" id="panelSignup" role="tabpanel" aria-labelledby="tabSignup" hidden novalidate>
+          <div class="field">
+            <label for="signupName">표시 이름</label>
+            <input class="input" id="signupName" name="name" type="text" autocomplete="nickname" maxlength="40" placeholder="멤버들에게 보여질 이름" required>
+          </div>
+          <div class="field">
+            <label for="signupEmail">이메일</label>
+            <input class="input" id="signupEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+          </div>
+          <div class="field">
+            <label for="signupPassword">비밀번호</label>
+            <input class="input" id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="6" placeholder="6자 이상" required>
+          </div>
+          <div class="field">
+            <label for="signupCode">초대 코드 <span style="font-weight:600;color:var(--muted-2)">(선택)</span></label>
+            <div class="inline-row">
+              <input class="input" id="signupCode" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="초대 코드가 있다면 입력">
+              <button class="btn ghost" id="checkCodeBtn" type="button">확인</button>
+            </div>
+            <p class="hint" id="codeHint">가입 후에도 입력할 수 있습니다.</p>
+          </div>
+          <button class="btn primary block" id="signupSubmit" type="submit">가입하고 시작하기</button>
+          <p class="form-note">가입 후 초대 코드를 확인하면 멤버로 승인됩니다. 확인 메일이 발송되면 먼저 메일 인증을 완료해 주세요.</p>
+        </form>
+
+        <div id="authNotice" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 초대 코드 입력 (승인 대기) -->
+  <section id="viewInvite" class="view" hidden>
+    <div class="card center-stage">
+      <span class="eyebrow">Step 2 · Invite</span>
+      <h2>초대 코드를 입력해 주세요</h2>
+      <p>계정은 만들어졌지만 아직 멤버 승인 전입니다. 초대받은 코드를 입력하면 갤러리가 열립니다.</p>
+      <div id="inviteNotice" hidden></div>
+      <form id="inviteForm" novalidate>
+        <div class="field">
+          <label for="inviteCode">초대 코드</label>
+          <input class="input" id="inviteCode" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="예: ABCD-2026" required>
+        </div>
+        <button class="btn primary block" id="inviteSubmit" type="submit">멤버로 승인받기</button>
+      </form>
+      <div class="who">
+        <span class="email" id="inviteEmail">—</span>
+        <span style="display:flex;gap:8px">
+          <button class="btn ghost sm" id="resendBtn" type="button" hidden>확인 메일 다시 받기</button>
+          <button class="btn ghost sm" id="inviteLogout" type="button">로그아웃</button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 피드 -->
+  <section id="viewFeed" class="view" hidden>
+    <div class="feed-head">
+      <div class="filters" role="group" aria-label="게시물 필터">
+        <button class="chip" data-filter="all" aria-pressed="true" type="button">전체 <span class="n" id="countAll">0</span></button>
+        <button class="chip" data-filter="image" aria-pressed="false" type="button">사진 <span class="n" id="countImage">0</span></button>
+        <button class="chip" data-filter="video" aria-pressed="false" type="button">영상 <span class="n" id="countVideo">0</span></button>
+      </div>
+      <button class="btn ghost sm" id="refreshBtn" type="button">새로고침</button>
+    </div>
+
+    <div id="feedNotice" hidden></div>
+
+    <form class="card composer" id="composer" novalidate>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm" hidden>
+      <button class="dropzone" id="pickBtn" type="button">
+        <strong>사진이나 영상을 올려 보세요</strong>
+        <span>눌러서 선택하거나 파일을 끌어다 놓으세요</span>
+      </button>
+      <div class="preview" id="previewWrap" hidden>
+        <div id="previewMedia"></div>
+        <span class="filetag" id="previewTag"></span>
+        <button class="remove" id="removeFile" type="button" aria-label="선택한 파일 제거">×</button>
+      </div>
+      <textarea class="textarea" id="captionInput" maxlength="500" rows="2" placeholder="이 순간에 대한 설명을 남겨 보세요 (선택)"></textarea>
+      <div class="composer-foot">
+        <span class="hint">사진 jpg·png·webp·gif / 영상 mp4·mov·webm · 파일당 최대 50MB</span>
+        <button class="btn primary" id="postBtn" type="submit" disabled>게시하기</button>
+      </div>
+      <div class="progress" id="uploadProgress" hidden>
+        <div class="track"><i></i></div><span id="uploadLabel">업로드 중…</span>
+      </div>
+    </form>
+
+    <div id="feedEmpty" class="empty" hidden>
+      <div class="big" aria-hidden="true">🌈</div>
+      <h3>아직 게시물이 없습니다</h3>
+      <p>첫 번째 사진이나 영상을 올려 이 공간을 시작해 보세요.</p>
+    </div>
+
+    <div id="postGrid" class="grid" aria-live="polite"></div>
+  </section>
+</main>
+
+<div class="wrap">
+  <footer class="site">
+    <span>멤버 갤러리 · 초대받은 멤버만 이용하는 비공개 공간</span>
+    <span id="footerStat">미디어는 비공개 버킷에 저장되며 임시 링크로 표시됩니다.</span>
+  </footer>
+</div>
+
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+/* ------------------------------------------------------------------ */
+/*  설정                                                               */
+/* ------------------------------------------------------------------ */
+const SUPABASE_URL = 'https://qriwmirjmifdlwgwthyw.supabase.co';
+// 공개되어도 되는 키(Publishable / legacy anon). service_role 키는 이 파일에 없습니다.
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyaXdtaXJqbWlmZGx3Z3d0aHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwMDgzNTEsImV4cCI6MjExMDU4NDM1MX0.j-qmSIMW1JnA6bT0Yhufu0_HXX2HGKzLWiQcRaM7D14';
+const BUCKET = 'media';
+const MAX_BYTES = 50 * 1024 * 1024;
+const SIGNED_TTL = 3600;
+const PENDING_CODE_KEY = 'mg_pending_invite';
+const SITE_URL = location.origin + location.pathname;
+
+const MEDIA_TYPES = {
+  'image/jpeg': 'image', 'image/png': 'image', 'image/webp': 'image', 'image/gif': 'image',
+  'video/mp4': 'video', 'video/quicktime': 'video', 'video/webm': 'video'
+};
+const EXT_TYPES = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+  mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm'
+};
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+
+/* 클라이언트 오류 수집(문제가 생겼을 때 원인 파악용) */
+const clientErrors = [];
+window.__clientErrors = clientErrors;
+window.addEventListener('error', (event) => {
+  clientErrors.push(String((event && event.message) || 'error'));
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event && event.reason;
+  clientErrors.push('unhandledrejection: ' + String((reason && reason.message) || reason || ''));
+});
+
+/* ------------------------------------------------------------------ */
+/*  DOM 헬퍼                                                           */
+/* ------------------------------------------------------------------ */
+const $ = (id) => document.getElementById(id);
+const state = {
+  session: null,
+  profile: null,
+  posts: [],
+  filter: 'all',
+  signed: new Map(),
+  signedAt: 0,
+  pendingFile: null,
+  pendingObjectUrl: null,
+  loadingFeed: false,
+  bootEmail: null,
+  emailUnconfirmed: false
+};
+
+const VIEWS = { loading: $('viewLoading'), auth: $('viewAuth'), invite: $('viewInvite'), feed: $('viewFeed') };
+
+function showView(name) {
+  Object.entries(VIEWS).forEach(([key, el]) => { el.hidden = key !== name; });
+  $('topActions').hidden = !(name === 'feed' || name === 'invite');
+}
+
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function initials(name) {
+  const text = String(name || '?').trim();
+  return text ? text.slice(0, 1).toUpperCase() : '?';
+}
+
+function timeAgo(iso) {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diff = Math.max(0, (Date.now() - then) / 1000);
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}일 전`;
+  return new Date(then).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function toast(message, kind = 'info', ms = 4200) {
+  const box = document.createElement('div');
+  box.className = 'toast ' + (kind === 'ok' || kind === 'error' ? kind : '');
+  const icon = kind === 'ok' ? '✓' : kind === 'error' ? '!' : '·';
+  box.innerHTML = `<span aria-hidden="true" style="font-weight:800">${icon}</span><span>${esc(message)}</span>`;
+  $('toasts').appendChild(box);
+  setTimeout(() => box.remove(), ms);
+}
+
+function setBusy(button, busy, busyLabel) {
+  if (!button) return;
+  if (busy) {
+    button.dataset.label = button.textContent;
+    button.disabled = true;
+    button.textContent = busyLabel || '처리 중…';
+  } else {
+    button.disabled = false;
+    if (button.dataset.label) button.textContent = button.dataset.label;
+  }
+}
+
+function notice(el, html, kind) {
+  if (!html) { el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.className = 'notice' + (kind ? ' ' + kind : '');
+  el.innerHTML = html;
+}
+
+/* ------------------------------------------------------------------ */
+/*  오류 메시지                                                        */
+/* ------------------------------------------------------------------ */
+function msgFor(error) {
+  const raw = String((error && (error.message || error.error_description || error.msg)) || error || '').trim();
+  const code = String((error && error.code) || '');
+  const lower = raw.toLowerCase();
+  if (/invalid login credentials/.test(lower)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
+  if (/email not confirmed/.test(lower)) return '이메일 확인이 아직 완료되지 않았습니다. 받은 편지함의 확인 링크를 먼저 눌러 주세요.';
+  if (/user already registered|already been registered/.test(lower)) return '이미 가입된 이메일입니다. 로그인해 주세요.';
+  if (/password should be at least/.test(lower)) return '비밀번호는 6자 이상이어야 합니다.';
+  if (/rate limit|too many requests/.test(lower) || code === 'over_email_send_rate_limit') return '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.';
+  if (/invalid email/.test(lower)) return '이메일 형식을 확인해 주세요.';
+  if (/signup is disabled/.test(lower)) return '현재 회원가입이 잠시 닫혀 있습니다. 관리자에게 문의해 주세요.';
+  if (/row-level security|permission denied|not authorized/.test(lower)) return '권한이 없습니다. 멤버 승인 상태를 확인해 주세요.';
+  if (/payload too large|exceeded the maximum allowed size|entity too large/.test(lower)) return '파일이 너무 큽니다. 50MB 이하로 올려 주세요.';
+  if (/mime type|content type/.test(lower)) return '지원하지 않는 파일 형식입니다. (jpg·png·webp·gif / mp4·mov·webm)';
+  if (/failed to fetch|networkerror|network error/.test(lower)) return '네트워크 연결을 확인해 주세요.';
+  return raw || '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+/* ------------------------------------------------------------------ */
+/*  프로필 / 세션                                                      */
+/* ------------------------------------------------------------------ */
+async function fetchProfile(userId, attempt = 0) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, display_name, role')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data && attempt < 3) {
+    await new Promise((r) => setTimeout(r, 700));
+    return fetchProfile(userId, attempt + 1);
+  }
+  return data;
+}
+
+function renderUserChip() {
+  const name = (state.profile && state.profile.display_name) || (state.session && state.session.user.email) || '멤버';
+  const role = (state.profile && state.profile.role) || 'pending';
+  $('userName').textContent = name;
+  $('userAvatar').textContent = initials(name);
+  const badge = $('userRole');
+  badge.textContent = role === 'owner' ? 'OWNER' : role === 'member' ? 'MEMBER' : 'PENDING';
+  badge.className = 'role-badge' + (role === 'owner' ? ' owner' : '');
+  $('ownerBtn').hidden = role !== 'owner';
+}
+
+async function applySession(session) {
+  state.session = session || null;
+  if (!session) {
+    state.profile = null;
+    renderUserChip();
+    showView('auth');
+    return;
+  }
+
+  let profile = null;
+  try {
+    profile = await fetchProfile(session.user.id);
+  } catch (error) {
+    toast(msgFor(error), 'error');
+  }
+  state.profile = profile;
+  renderUserChip();
+
+  const email = session.user.email || '';
+  if (!profile) {
+    // 프로필 행이 아직 없거나 읽지 못한 경우: 승인 대기 화면에서 안내
+    $('inviteEmail').textContent = email;
+    notice($('inviteNotice'), '프로필을 불러오지 못했습니다. 잠시 후 새로고침하거나 로그아웃 후 다시 로그인해 주세요.', 'warn');
+    showView('invite');
+    return;
+  }
+
+  if (profile.role === 'pending') {
+    $('inviteEmail').textContent = email;
+    $('resendBtn').hidden = !state.emailUnconfirmed;
+    const saved = localStorage.getItem(PENDING_CODE_KEY);
+    if (saved && !$('inviteCode').value) $('inviteCode').value = saved;
+    showView('invite');
+    return;
+  }
+
+  notice($('inviteNotice'), '', null);
+  showView('feed');
+  await loadFeed();
+}
+
+/* ------------------------------------------------------------------ */
+/*  로그인 / 회원가입                                                  */
+/* ------------------------------------------------------------------ */
+function setAuthTab(which) {
+  const isLogin = which === 'login';
+  $('tabLogin').setAttribute('aria-selected', String(isLogin));
+  $('tabSignup').setAttribute('aria-selected', String(!isLogin));
+  $('panelLogin').hidden = !isLogin;
+  $('panelSignup').hidden = isLogin;
+  notice($('authNotice'), '', null);
+}
+
+$('tabLogin').addEventListener('click', () => setAuthTab('login'));
+$('tabSignup').addEventListener('click', () => setAuthTab('signup'));
+
+function parseHashError() {
+  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : '';
+  const query = location.search.startsWith('?') ? location.search.slice(1) : '';
+  const params = new URLSearchParams(hash || query);
+  const description = params.get('error_description') || params.get('error');
+  if (!description) return null;
+  history.replaceState(null, '', location.pathname + location.search.replace(/[?&](error|error_description|error_code)=[^&]*/g, ''));
+  return description.replace(/\+/g, ' ');
+}
+
+$('panelLogin').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const email = $('loginEmail').value.trim();
+  const password = $('loginPassword').value;
+  notice($('authNotice'), '', null);
+  if (!email || !password) {
+    toast('이메일과 비밀번호를 입력해 주세요.', 'error');
+    return;
+  }
+  const button = $('loginSubmit');
+  setBusy(button, true, '로그인 중…');
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (!data.session) throw new Error('로그인 세션을 만들지 못했습니다.');
+    await applySession(data.session);
+    $('loginPassword').value = '';
+    toast('로그인했습니다.', 'ok');
+  } catch (error) {
+    const message = msgFor(error);
+    notice($('authNotice'), `<span class="ico">!</span><span>${esc(message)}</span>`, 'warn');
+    if (/이메일 확인/.test(message)) {
+      state.bootEmail = email;
+      state.emailUnconfirmed = true;
+    }
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+$('checkCodeBtn').addEventListener('click', async () => {
+  const code = $('signupCode').value.trim();
+  const hint = $('codeHint');
+  if (!code) {
+    hint.className = 'hint bad';
+    hint.textContent = '초대 코드를 입력해 주세요.';
+    return;
+  }
+  const button = $('checkCodeBtn');
+  setBusy(button, true, '확인 중…');
+  try {
+    const { data, error } = await supabase.rpc('check_invite_code', { p_code: code });
+    if (error) throw error;
+    if (data === true) {
+      hint.className = 'hint ok';
+      hint.textContent = '사용할 수 있는 초대 코드입니다. 가입 후 자동으로 입력됩니다.';
+    } else {
+      hint.className = 'hint bad';
+      hint.textContent = '사용할 수 없는 초대 코드입니다. (오타·사용 횟수·기간을 확인해 주세요)';
+    }
+  } catch (error) {
+    hint.className = 'hint bad';
+    hint.textContent = msgFor(error);
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+$('panelSignup').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const name = $('signupName').value.trim();
+  const email = $('signupEmail').value.trim();
+  const password = $('signupPassword').value;
+  const code = $('signupCode').value.trim();
+  notice($('authNotice'), '', null);
+
+  if (!name) { toast('표시 이름을 입력해 주세요.', 'error'); return; }
+  if (!email) { toast('이메일을 입력해 주세요.', 'error'); return; }
+  if (password.length < 6) { toast('비밀번호는 6자 이상이어야 합니다.', 'error'); return; }
+
+  const button = $('signupSubmit');
+  setBusy(button, true, '가입 중…');
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+        emailRedirectTo: SITE_URL
+      }
+    });
+    if (error) throw error;
+
+    if (code) localStorage.setItem(PENDING_CODE_KEY, code);
+
+    if (data.session) {
+      await applySession(data.session);
+      if (code) {
+        await redeemCode(code, { silent: true });
+      } else {
+        toast('가입했습니다. 초대 코드를 입력해 주세요.', 'ok');
+      }
+    } else {
+      state.bootEmail = email;
+      state.emailUnconfirmed = true;
+      $('signupPassword').value = '';
+      notice(
+        $('authNotice'),
+        '<span class="ico">✉️</span><span><b>확인 메일을 보냈습니다.</b><br>' + esc(email) +
+        ' 의 받은 편지함에서 확인 링크를 눌러 주세요. 링크를 누른 뒤 이 화면으로 돌아와 로그인하면 초대 코드를 입력할 수 있습니다.</span>',
+        'ok'
+      );
+    }
+  } catch (error) {
+    notice($('authNotice'), `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/*  초대 코드 사용                                                     */
+/* ------------------------------------------------------------------ */
+async function redeemCode(code, options = {}) {
+  const trimmed = String(code || '').trim();
+  if (!trimmed) {
+    toast('초대 코드를 입력해 주세요.', 'error');
+    return false;
+  }
+  const { data, error } = await supabase.rpc('redeem_invite', { p_code: trimmed });
+  if (error) throw error;
+  if (data === true) {
+    localStorage.removeItem(PENDING_CODE_KEY);
+    const profile = await fetchProfile(state.session.user.id);
+    state.profile = profile;
+    renderUserChip();
+    notice($('inviteNotice'), '', null);
+    showView('feed');
+    history.replaceState(null, '', location.pathname);
+    toast('멤버로 승인되었습니다. 환영합니다!', 'ok');
+    await loadFeed();
+    return true;
+  }
+  if (!options.silent) {
+    notice($('inviteNotice'), '<span class="ico">!</span><span>사용할 수 없는 초대 코드입니다. 코드 철자와 사용 가능 횟수·기간을 확인해 주세요.</span>', 'warn');
+  }
+  return false;
+}
+
+$('inviteForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('inviteSubmit');
+  setBusy(button, true, '확인 중…');
+  notice($('inviteNotice'), '', null);
+  try {
+    await redeemCode($('inviteCode').value);
+  } catch (error) {
+    notice($('inviteNotice'), `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+$('resendBtn').addEventListener('click', async () => {
+  const email = (state.session && state.session.user.email) || state.bootEmail;
+  if (!email) return;
+  const button = $('resendBtn');
+  setBusy(button, true, '발송 중…');
+  try {
+    const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: SITE_URL } });
+    if (error) throw error;
+    toast('확인 메일을 다시 보냈습니다.', 'ok');
+  } catch (error) {
+    toast(msgFor(error), 'error');
+  } finally {
+    setBusy(button, false);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/*  로그아웃                                                           */
+/* ------------------------------------------------------------------ */
+async function signOut() {
+  try { await supabase.auth.signOut(); } catch (error) { /* 세션 정리 실패는 무시하고 화면만 전환 */ }
+  state.session = null;
+  state.profile = null;
+  state.posts = [];
+  state.signed.clear();
+  state.pendingFile = null;
+  resetComposer();
+  renderUserChip();
+  showView('auth');
+  setAuthTab('login');
+  toast('로그아웃했습니다.', 'ok');
+}
+$('logoutBtn').addEventListener('click', signOut);
+$('inviteLogout').addEventListener('click', signOut);
+
+/* ------------------------------------------------------------------ */
+/*  업로드                                                             */
+/* ------------------------------------------------------------------ */
+function detectType(file) {
+  if (MEDIA_TYPES[file.type]) return { mime: file.type, kind: MEDIA_TYPES[file.type] };
+  const ext = String(file.name || '').split('.').pop().toLowerCase();
+  if (EXT_TYPES[ext]) return { mime: EXT_TYPES[ext], kind: MEDIA_TYPES[EXT_TYPES[ext]] };
+  return null;
+}
+
+function resetComposer() {
+  if (state.pendingObjectUrl) URL.revokeObjectURL(state.pendingObjectUrl);
+  state.pendingObjectUrl = null;
+  state.pendingFile = null;
+  $('fileInput').value = '';
+  $('previewWrap').hidden = true;
+  $('previewMedia').innerHTML = '';
+  $('previewTag').textContent = '';
+  $('captionInput').value = '';
+  $('postBtn').disabled = true;
+  $('uploadProgress').hidden = true;
+}
+
+function chooseFile(file) {
+  if (!file) return;
+  const type = detectType(file);
+  if (!type) {
+    toast('지원하지 않는 파일 형식입니다. (jpg·png·webp·gif / mp4·mov·webm)', 'error');
+    return;
+  }
+  if (file.size > MAX_BYTES) {
+    toast(`파일이 너무 큽니다. ${(file.size / 1024 / 1024).toFixed(1)}MB → 50MB 이하로 올려 주세요.`, 'error');
+    return;
+  }
+  if (state.pendingObjectUrl) URL.revokeObjectURL(state.pendingObjectUrl);
+  state.pendingFile = file;
+  state.pendingObjectUrl = URL.createObjectURL(file);
+  const media = $('previewMedia');
+  media.innerHTML = type.kind === 'video'
+    ? `<video src="${state.pendingObjectUrl}" controls playsinline preload="metadata"></video>`
+    : `<img src="${state.pendingObjectUrl}" alt="선택한 사진 미리보기">`;
+  $('previewTag').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+  $('previewWrap').hidden = false;
+  $('postBtn').disabled = false;
+}
+
+function safeName(name) {
+  const base = String(name || 'file').normalize('NFKD').replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
+  return (base.slice(-80) || 'file');
+}
+
+async function uploadPost(event) {
+  event.preventDefault();
+  if (!state.pendingFile || !state.session) return;
+  const file = state.pendingFile;
+  const type = detectType(file);
+  if (!type) { toast('지원하지 않는 파일 형식입니다.', 'error'); return; }
+
+  const caption = $('captionInput').value.trim();
+  const button = $('postBtn');
+  button.disabled = true;
+  button.textContent = '게시 중…';
+  $('uploadProgress').hidden = false;
+  $('uploadLabel').textContent = '업로드 중…';
+
+  const path = `${state.session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName(file.name)}`;
+  let uploaded = false;
+  try {
+    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
+      contentType: type.mime, cacheControl: '3600', upsert: false
+    });
+    if (uploadError) throw uploadError;
+    uploaded = true;
+
+    $('uploadLabel').textContent = '게시물 저장 중…';
+    const { error: insertError } = await supabase.from('posts').insert({
+      author_id: state.session.user.id,
+      caption: caption || null,
+      media_path: path,
+      media_type: type.kind
+    });
+    if (insertError) throw insertError;
+
+    resetComposer();
+    toast('게시했습니다.', 'ok');
+    await loadFeed({ silent: true });
+  } catch (error) {
+    if (uploaded) {
+      try { await supabase.storage.from(BUCKET).remove([path]); } catch (cleanupError) { /* 정리 실패는 무시 */ }
+    }
+    toast(msgFor(error), 'error', 6000);
+    button.disabled = false;
+    button.textContent = '게시하기';
+    $('uploadProgress').hidden = true;
+  }
+}
+
+$('composer').addEventListener('submit', uploadPost);
+$('pickBtn').addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', (event) => chooseFile(event.target.files && event.target.files[0]));
+$('removeFile').addEventListener('click', resetComposer);
+
+const dropzone = $('pickBtn');
+['dragenter', 'dragover'].forEach((name) => {
+  dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.add('dragover'); });
+});
+['dragleave', 'drop'].forEach((name) => {
+  dropzone.addEventListener(name, (event) => { event.preventDefault(); dropzone.classList.remove('dragover'); });
+});
+dropzone.addEventListener('drop', (event) => {
+  const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+  if (file) chooseFile(file);
+});
+
+/* ------------------------------------------------------------------ */
+/*  피드                                                               */
+/* ------------------------------------------------------------------ */
+async function signPaths(paths) {
+  if (!paths.length) return;
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrls(paths, SIGNED_TTL);
+  if (error) throw error;
+  (data || []).forEach((item) => {
+    if (item && item.signedUrl) state.signed.set(item.path, item.signedUrl);
+  });
+  state.signedAt = Date.now();
+}
+
+function renderSkeleton() {
+  $('postGrid').innerHTML = Array.from({ length: 3 })
+    .map(() => '<div class="skeleton" aria-hidden="true"></div>').join('');
+}
+
+async function loadFeed(options = {}) {
+  if (state.loadingFeed) return;
+  state.loadingFeed = true;
+  const refreshButton = $('refreshBtn');
+  if (!options.silent) {
+    setBusy(refreshButton, true, '불러오는 중…');
+    if (!state.posts.length) renderSkeleton();
+  }
+  try {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id, author_id, caption, media_path, media_type, created_at, profiles(display_name), comments(id, author_id, body, created_at, profiles(display_name))')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+
+    state.posts = Array.isArray(data) ? data : [];
+    const missing = state.posts.map((post) => post.media_path).filter((path) => path && !state.signed.has(path));
+    if (missing.length) await signPaths(missing);
+    renderFeed();
+  } catch (error) {
+    $('postGrid').innerHTML = '';
+    notice($('feedNotice'), `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+  } finally {
+    state.loadingFeed = false;
+    setBusy(refreshButton, false);
+  }
+}
+
+function postCard(post) {
+  const author = (post.profiles && post.profiles.display_name) || '멤버';
+  const isMine = state.session && post.author_id === state.session.user.id;
+  const url = state.signed.get(post.media_path) || '';
+  const comments = Array.isArray(post.comments) ? post.comments.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) : [];
+  const open = state.openComments && state.openComments.has(post.id);
+
+  const media = url
+    ? (post.media_type === 'video'
+      ? `<video src="${esc(url)}" controls playsinline preload="metadata"></video>`
+      : `<img src="${esc(url)}" alt="${esc(post.caption || author + '님의 사진')}" loading="lazy">`)
+    : '<div style="padding:40px 16px;color:var(--muted-2);font-size:13px">미디어를 불러오지 못했습니다.</div>';
+
+  const commentItems = comments.map((comment) => {
+    const name = (comment.profiles && comment.profiles.display_name) || '멤버';
+    const mine = state.session && comment.author_id === state.session.user.id;
+    return `<li data-comment-id="${esc(comment.id)}">
+      <span class="avatar" aria-hidden="true">${esc(initials(name))}</span>
+      <div class="body">
+        <b>${esc(name)}</b><time>${esc(timeAgo(comment.created_at))}</time>
+        <p>${esc(comment.body)}</p>
+      </div>
+      ${mine ? '<button class="icon-btn" data-action="delete-comment" type="button" aria-label="댓글 삭제">×</button>' : '<span></span>'}
+    </li>`;
+  }).join('');
+
+  return `<article class="card post" data-post-id="${esc(post.id)}">
+    <div class="post-media" data-action="zoom">
+      ${media}
+      <span class="media-badge">${post.media_type === 'video' ? 'VIDEO' : 'PHOTO'}</span>
+    </div>
+    <div class="post-body">
+      <div class="post-head">
+        <span class="avatar sm" aria-hidden="true">${esc(initials(author))}</span>
+        <div class="who"><strong>${esc(author)}</strong><time datetime="${esc(post.created_at)}">${esc(timeAgo(post.created_at))}</time></div>
+        <span class="spacer"></span>
+        ${isMine ? '<button class="icon-btn" data-action="delete-post" type="button" aria-label="게시물 삭제">×</button>' : ''}
+      </div>
+      ${post.caption ? `<p class="caption">${esc(post.caption)}</p>` : ''}
+      <button class="comment-toggle" data-action="toggle-comments" type="button" aria-expanded="${open ? 'true' : 'false'}">댓글 ${comments.length}</button>
+      <div class="comments" ${open ? '' : 'hidden'}>
+        ${comments.length ? `<ul>${commentItems}</ul>` : '<p class="no-comments">아직 댓글이 없습니다. 첫 댓글을 남겨 보세요.</p>'}
+        <form class="comment-form" data-action="comment">
+          <input class="input" name="body" type="text" maxlength="2000" placeholder="댓글 남기기" autocomplete="off" aria-label="댓글">
+          <button class="btn ghost sm" type="submit">등록</button>
+        </form>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderFeed() {
+  const list = state.posts.filter((post) => state.filter === 'all' || post.media_type === state.filter);
+  const counts = {
+    all: state.posts.length,
+    image: state.posts.filter((post) => post.media_type === 'image').length,
+    video: state.posts.filter((post) => post.media_type === 'video').length
+  };
+  $('countAll').textContent = counts.all;
+  $('countImage').textContent = counts.image;
+  $('countVideo').textContent = counts.video;
+  document.querySelectorAll('.chip[data-filter]').forEach((chip) => {
+    chip.setAttribute('aria-pressed', String(chip.dataset.filter === state.filter));
+  });
+
+  $('postGrid').innerHTML = list.map(postCard).join('');
+  $('feedEmpty').hidden = list.length > 0;
+  if (!list.length) {
+    const empty = $('feedEmpty');
+    empty.querySelector('h3').textContent = state.posts.length ? '이 종류의 게시물이 아직 없습니다' : '아직 게시물이 없습니다';
+    empty.querySelector('p').textContent = state.posts.length
+      ? '다른 필터를 눌러 전체 게시물을 확인해 보세요.'
+      : '첫 번째 사진이나 영상을 올려 이 공간을 시작해 보세요.';
+  }
+}
+
+document.querySelectorAll('.chip[data-filter]').forEach((chip) => {
+  chip.addEventListener('click', () => {
+    state.filter = chip.dataset.filter;
+    renderFeed();
+  });
+});
+
+$('refreshBtn').addEventListener('click', () => loadFeed());
+
+/* 카드 이벤트(위임) */
+$('postGrid').addEventListener('click', async (event) => {
+  const actionEl = event.target.closest('[data-action]');
+  if (!actionEl) return;
+  const card = actionEl.closest('[data-post-id]');
+  if (!card) return;
+  const postId = card.dataset.postId;
+  const post = state.posts.find((item) => item.id === postId);
+  if (!post) return;
+  const action = actionEl.dataset.action;
+
+  if (action === 'toggle-comments') {
+    const box = card.querySelector('.comments');
+    const isHidden = box.hidden;
+    box.hidden = !isHidden;
+    actionEl.setAttribute('aria-expanded', String(isHidden));
+    if (!state.openComments) state.openComments = new Set();
+    if (isHidden) state.openComments.add(postId); else state.openComments.delete(postId);
+    if (isHidden) {
+      const input = box.querySelector('input[name="body"]');
+      if (input && window.innerWidth > 620) input.focus();
+    }
+    return;
+  }
+
+  if (action === 'delete-post') {
+    const ok = await confirmBox('게시물을 삭제할까요?', '올린 사진·영상과 달린 댓글이 함께 삭제됩니다. 되돌릴 수 없습니다.');
+    if (!ok) return;
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', post.id);
+      if (error) throw error;
+      try { await supabase.storage.from(BUCKET).remove([post.media_path]); } catch (cleanupError) { /* 파일 정리 실패는 무시 */ }
+      state.posts = state.posts.filter((item) => item.id !== post.id);
+      renderFeed();
+      toast('게시물을 삭제했습니다.', 'ok');
+    } catch (error) {
+      toast(msgFor(error), 'error');
+    }
+    return;
+  }
+
+  if (action === 'delete-comment') {
+    const item = actionEl.closest('[data-comment-id]');
+    if (!item) return;
+    const ok = await confirmBox('댓글을 삭제할까요?', '삭제한 댓글은 되돌릴 수 없습니다.');
+    if (!ok) return;
+    try {
+      const { error } = await supabase.from('comments').delete().eq('id', item.dataset.commentId);
+      if (error) throw error;
+      post.comments = (post.comments || []).filter((comment) => comment.id !== item.dataset.commentId);
+      renderFeed();
+      toast('댓글을 삭제했습니다.', 'ok');
+    } catch (error) {
+      toast(msgFor(error), 'error');
+    }
+    return;
+  }
+
+  if (action === 'zoom') {
+    if (!event.target.closest('video')) openLightbox(post);
+  }
+});
+
+$('postGrid').addEventListener('submit', async (event) => {
+  const form = event.target.closest('form[data-action="comment"]');
+  if (!form) return;
+  event.preventDefault();
+  const card = form.closest('[data-post-id]');
+  const post = state.posts.find((item) => item.id === card.dataset.postId);
+  const input = form.querySelector('input[name="body"]');
+  const body = input.value.trim();
+  if (!post || !body) return;
+  if (body.length > 2000) { toast('댓글은 2000자까지 작성할 수 있습니다.', 'error'); return; }
+
+  const submit = form.querySelector('button[type="submit"]');
+  setBusy(submit, true, '등록 중');
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({ post_id: post.id, author_id: state.session.user.id, body })
+      .select('id, author_id, body, created_at, profiles(display_name)')
+      .single();
+    if (error) throw error;
+    post.comments = post.comments || [];
+    post.comments.push(data);
+    if (!state.openComments) state.openComments = new Set();
+    state.openComments.add(post.id);
+    renderFeed();
+  } catch (error) {
+    toast(msgFor(error), 'error');
+  } finally {
+    setBusy(submit, false);
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/*  라이트박스 / 확인 대화상자                                         */
+/* ------------------------------------------------------------------ */
+function openLightbox(post) {
+  const url = state.signed.get(post.media_path);
+  if (!url) return;
+  const layer = document.createElement('div');
+  layer.className = 'lightbox';
+  layer.innerHTML = (post.media_type === 'video'
+    ? `<video src="${esc(url)}" controls autoplay playsinline></video>`
+    : `<img src="${esc(url)}" alt="${esc(post.caption || '사진')}">`) +
+    '<button class="close" type="button" aria-label="닫기">×</button>';
+  const close = () => { layer.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (event) => { if (event.key === 'Escape') close(); };
+  layer.addEventListener('click', (event) => {
+    if (event.target === layer || event.target.classList.contains('close')) close();
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(layer);
+}
+
+function confirmBox(title, description) {
+  return new Promise((resolve) => {
+    const layer = document.createElement('div');
+    layer.className = 'overlay';
+    layer.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <h3>${esc(title)}</h3>
+      <p>${esc(description)}</p>
+      <div class="modal-actions">
+        <button class="btn ghost" data-answer="no" type="button">취소</button>
+        <button class="btn danger" data-answer="yes" type="button">삭제</button>
+      </div>
+    </div>`;
+    const finish = (answer) => { layer.remove(); document.removeEventListener('keydown', onKey); resolve(answer); };
+    const onKey = (event) => { if (event.key === 'Escape') finish(false); };
+    layer.addEventListener('click', (event) => {
+      if (event.target === layer) finish(false);
+      const answer = event.target.closest('[data-answer]');
+      if (answer) finish(answer.dataset.answer === 'yes');
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(layer);
+    const yes = layer.querySelector('[data-answer="yes"]');
+    if (yes) yes.focus();
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  초대 관리(owner)                                                   */
+/* ------------------------------------------------------------------ */
+const OWNER_SQL_CREATE = `insert into public.invite_codes (code, label, max_uses, expires_at)
+values ('CODE-2026', '설명을 적어 주세요', 5, null);`;
+const OWNER_SQL_LIST = `select code, label, max_uses, used_count, expires_at, created_at
+from public.invite_codes
+order by created_at desc;`;
+const DASHBOARD_URL = 'https://supabase.com/dashboard/project/qriwmirjmifdlwgwthyw/sql/new';
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('복사했습니다.', 'ok');
+  } catch (error) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); toast('복사했습니다.', 'ok'); }
+    catch (fallbackError) { toast('복사하지 못했습니다. 직접 선택해 주세요.', 'error'); }
+    area.remove();
+  }
+}
+
+async function openOwnerPanel() {
+  const layer = document.createElement('div');
+  layer.className = 'overlay';
+  layer.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ownerTitle" style="width:min(640px,100%)">
+    <h3 id="ownerTitle">초대 코드 관리</h3>
+    <p>초대 코드 목록은 보안 정책(RLS)상 앱에서 읽을 수 없습니다. 코드 발급·확인은 Supabase SQL Editor에서 합니다.</p>
+
+    <div style="font-size:12.5px;font-weight:800;color:var(--muted);margin-top:4px">새 초대 코드 발급</div>
+    <pre class="code-block" id="sqlCreate">${esc(OWNER_SQL_CREATE)}</pre>
+    <div class="copy-row"><button class="btn ghost sm" data-copy="sqlCreate" type="button">복사</button></div>
+
+    <div style="font-size:12.5px;font-weight:800;color:var(--muted)">코드 사용 현황 확인</div>
+    <pre class="code-block" id="sqlList">${esc(OWNER_SQL_LIST)}</pre>
+    <div class="copy-row"><button class="btn ghost sm" data-copy="sqlList" type="button">복사</button></div>
+
+    <div id="memberBox" style="margin-top:6px">
+      <div style="font-size:12.5px;font-weight:800;color:var(--muted)">멤버 목록</div>
+      <ul class="member-list" id="memberList"><li style="color:var(--muted-2)">불러오는 중…</li></ul>
+    </div>
+
+    <div class="modal-actions">
+      <a class="btn ghost" href="${DASHBOARD_URL}" target="_blank" rel="noopener noreferrer">SQL Editor 열기</a>
+      <button class="btn primary" data-close type="button">닫기</button>
+    </div>
+  </div>`;
+
+  const close = () => { layer.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (event) => { if (event.key === 'Escape') close(); };
+  layer.addEventListener('click', (event) => {
+    if (event.target === layer || event.target.closest('[data-close]')) close();
+    const copyButton = event.target.closest('[data-copy]');
+    if (copyButton) {
+      const source = $(copyButton.dataset.copy);
+      if (source) copyText(source.textContent);
+    }
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(layer);
+
+  try {
+    const { data, error } = await supabase.from('profiles').select('id, display_name, role, created_at').order('created_at', { ascending: true });
+    if (error) throw error;
+    const list = $('memberList');
+    if (!data || !data.length) {
+      list.innerHTML = '<li style="color:var(--muted-2)">아직 멤버가 없습니다.</li>';
+      return;
+    }
+    list.innerHTML = data.map((member) => `<li>
+      <span class="avatar" aria-hidden="true">${esc(initials(member.display_name))}</span>
+      <span>${esc(member.display_name || '멤버')}</span>
+      <span class="role-badge${member.role === 'owner' ? ' owner' : ''}">${esc(String(member.role || 'pending').toUpperCase())}</span>
+    </li>`).join('');
+  } catch (error) {
+    const list = $('memberList');
+    if (list) list.innerHTML = `<li style="color:#fda4af">${esc(msgFor(error))}</li>`;
+  }
+}
+
+$('ownerBtn').addEventListener('click', openOwnerPanel);
+
+/* ------------------------------------------------------------------ */
+/*  시작                                                               */
+/* ------------------------------------------------------------------ */
+(async function boot() {
+  showView('loading');
+
+  const hashError = parseHashError();
+  if (hashError) {
+    toast('로그인 링크를 처리하지 못했습니다: ' + hashError, 'error', 7000);
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    await applySession(data.session);
+  } catch (error) {
+    showView('auth');
+    notice($('authNotice'), `<span class="ico">!</span><span>${esc(msgFor(error))}</span>`, 'warn');
+  }
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      if (state.session) {
+        state.session = null;
+        state.profile = null;
+        renderUserChip();
+        showView('auth');
+      }
+      return;
+    }
+    if (event === 'SIGNED_IN' && session && (!state.session || state.session.user.id !== session.user.id)) {
+      state.session = session;
+      setTimeout(() => { applySession(session); }, 0);
+    }
+  });
+
+  // 임시 링크(Signed URL)는 1시간 유효 → 화면으로 돌아왔을 때 오래됐으면 갱신
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.session && state.profile &&
+        (state.profile.role === 'member' || state.profile.role === 'owner') &&
+        Date.now() - state.signedAt > 45 * 60 * 1000) {
+      loadFeed({ silent: true });
+    }
+  });
+})();
+</script>
+</body>
+</html>
