@@ -1059,6 +1059,7 @@ function resetComposer() {
   $('previewTag').textContent = '';
   $('captionInput').value = '';
   $('postBtn').disabled = true;
+  $('postBtn').textContent = '게시하기';
   $('uploadProgress').hidden = true;
 }
 
@@ -1187,6 +1188,7 @@ async function loadFeed(options = {}) {
       .limit(100);
     if (error) throw error;
 
+    notice($('feedNotice'), '', null);
     state.posts = Array.isArray(data) ? data : [];
     const missing = state.posts.map((post) => post.media_path).filter((path) => path && !state.signed.has(path));
     if (missing.length) await signPaths(missing);
